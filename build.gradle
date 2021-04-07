@@ -1,0 +1,50 @@
+plugins {
+	id 'java-library'
+	id 'java-gradle-plugin'
+	id 'maven-publish'
+	id 'checkstyle'
+}
+
+group = 'net.fabricmc'
+version = '0.1.0'
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+
+	withSourcesJar()
+}
+
+tasks.withType(JavaCompile) {
+	options.release = 11
+}
+
+repositories {
+	mavenCentral()
+
+	maven {
+		name = 'Fabric'
+		url = 'https://maven.fabricmc.net'
+	}
+}
+
+dependencies {
+	implementation gradleApi()
+
+	implementation "org.ow2.asm:asm:$project.asm_version"
+	implementation "org.ow2.asm:asm-tree:$project.asm_version"
+}
+
+gradlePlugin {
+	plugins {
+		filament {
+			id = 'net.fabricmc.filament'
+			implementationClass = 'net.fabricmc.filament.FilamentGradlePlugin'
+		}
+	}
+}
+
+checkstyle {
+	configFile = file('checkstyle.xml')
+	toolVersion = '8.41.1'
+}
