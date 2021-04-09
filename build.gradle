@@ -5,8 +5,10 @@ plugins {
 	id 'checkstyle'
 }
 
+def ENV = System.getenv()
+
 group = 'net.fabricmc'
-version = '0.1.0'
+version = '0.1.0' + (ENV.GITHUB_ACTIONS ? "" : "+local")
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_11
@@ -16,6 +18,7 @@ java {
 }
 
 tasks.withType(JavaCompile) {
+	options.encoding = "UTF-8"
 	options.release = 11
 }
 
@@ -47,4 +50,25 @@ gradlePlugin {
 checkstyle {
 	configFile = file('checkstyle.xml')
 	toolVersion = '8.41.1'
+}
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	repositories {
+		if (ENV.MAVEN_URL) {
+			repositories.maven {
+				name "fabric"
+				url ENV.MAVEN_URL
+				credentials {
+					username ENV.MAVEN_USERNAME
+					password ENV.MAVEN_PASSWORD
+				}
+			}
+		}
+	}
 }
