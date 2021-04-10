@@ -8,7 +8,7 @@ plugins {
 def ENV = System.getenv()
 
 group = 'net.fabricmc'
-version = '0.1.0' + (ENV.GITHUB_ACTIONS ? "" : "+local")
+version = '0.2.0' + (ENV.GITHUB_ACTIONS ? "" : "+local")
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_11
@@ -62,12 +62,6 @@ checkstyle {
 }
 
 publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-		}
-	}
-
 	repositories {
 		if (ENV.MAVEN_URL) {
 			repositories.maven {
