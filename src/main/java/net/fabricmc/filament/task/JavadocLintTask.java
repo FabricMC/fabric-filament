@@ -23,8 +23,7 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 public class JavadocLintTask extends DefaultTask {
-	private static final Pattern PARAM_DOC_START = Pattern.compile("^@param\\s+");
-	private static final Pattern TYPE_PARAM_DOC_START = Pattern.compile("^@param\\s+<");
+	private static final Pattern PARAM_DOC_LINE = Pattern.compile("^@param\\s+[^<].*$");
 	private final DirectoryProperty mappingDirectory = getProject().getObjects().directoryProperty();
 
 	@InputDirectory
@@ -66,7 +65,7 @@ public class JavadocLintTask extends DefaultTask {
 					}
 				} else if (entry instanceof MethodEntry) {
 					if (javadoc.lines().anyMatch(JavadocLintTask::isRegularMethodParameter)) {
-						localErrors.add("method contains parameter docs, which should be on the parameter itself");
+						localErrors.add("method javadoc contains parameter docs, which should be on the parameter itself");
 					}
 				}
 
@@ -92,7 +91,7 @@ public class JavadocLintTask extends DefaultTask {
 	}
 
 	private static boolean isRegularMethodParameter(String line) {
-		return PARAM_DOC_START.matcher(line).matches() && !TYPE_PARAM_DOC_START.matcher(line).matches();
+		return PARAM_DOC_LINE.matcher(line).matches();
 	}
 
 	private static String getFirstWord(String str) {
