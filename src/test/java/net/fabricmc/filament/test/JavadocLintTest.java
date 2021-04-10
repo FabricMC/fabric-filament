@@ -51,6 +51,25 @@ class JavadocLintTest extends ProjectTest {
 	}
 
 	@Test
+	public void multipleErrors() {
+		setupProject(
+				"javadocLint",
+				"mappings/ParamInMethod.mapping",
+				"mappings/ParamPeriod.mapping",
+				"mappings/UppercaseParam.mapping"
+		);
+
+		BuildResult result = GradleRunner.create()
+				.withPluginClasspath()
+				.withProjectDir(projectDirectory)
+				.withArguments("javadocLint")
+				.buildAndFail();
+
+		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.getOutput()).contains("Found 3 javadoc format errors");
+	}
+
+	@Test
 	public void successful() {
 		setupProject("javadocLint", "mappings/Successful.mapping");
 
