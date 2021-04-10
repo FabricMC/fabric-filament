@@ -36,6 +36,7 @@ dependencies {
 
 	implementation "org.ow2.asm:asm:$project.asm_version"
 	implementation "org.ow2.asm:asm-tree:$project.asm_version"
+	implementation "cuchaz:enigma:$project.enigma_version"
 }
 
 gradlePlugin {
