@@ -12,7 +12,7 @@ public class MinecraftLibrariesTest extends ProjectTest {
 		GradleRunner runner = GradleRunner.create()
 				.withPluginClasspath()
 				.withProjectDir(projectDirectory)
-				.withArguments("printLibraries");
+				.withArguments("printLibraries", "--stacktrace");
 
 		return runner.build();
 	}

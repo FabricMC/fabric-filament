@@ -5,21 +5,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.google.gson.JsonObject;
-
 @SuppressWarnings("unused")
 public final class MinecraftVersionMetadata {
 	// Always use a specific OS here to ensure the inputs are always the same. This isn't an issue as it will never be ran
 	public static final String OS = "linux";
 
-	private JsonObject arguments;
+	private Map<String, Object> arguments;
 	private AssetIndex assetIndex;
 	private String assets;
 	private int complianceLevel;
 	private Map<String, Download> downloads;
 	private String id;
 	private List<Library> libraries;
-	private JsonObject logging;
+	private Map<String, Object> logging;
 	private String mainClass;
 	private int minimumLauncherVersion;
 	private String releaseTime;
@@ -30,7 +28,7 @@ public final class MinecraftVersionMetadata {
 		return getDownloads().get(key);
 	}
 
-	public JsonObject getArguments() {
+	public Map<String, Object> getArguments() {
 		return arguments;
 	}
 
@@ -58,7 +56,7 @@ public final class MinecraftVersionMetadata {
 		return libraries;
 	}
 
-	public JsonObject getLogging() {
+	public Map<String, Object> getLogging() {
 		return logging;
 	}
 
@@ -82,7 +80,7 @@ public final class MinecraftVersionMetadata {
 		return type;
 	}
 
-	public final class AssetIndex extends Downloadable {
+	public static final class AssetIndex extends Downloadable {
 		private String id;
 		private long totalSize;
 
@@ -99,10 +97,10 @@ public final class MinecraftVersionMetadata {
 		}
 	}
 
-	public final class Download extends Downloadable {
+	public static final class Download extends Downloadable {
 	}
 
-	public final class Library {
+	public static final class Library {
 		private Downloads downloads;
 		private String name;
 		private Map<String, String> natives;
@@ -167,7 +165,7 @@ public final class MinecraftVersionMetadata {
 		}
 	}
 
-	public final class Downloads {
+	public static final class Downloads {
 		private Artifact artifact;
 		private Map<String, Classifier> classifiers;
 
@@ -184,13 +182,13 @@ public final class MinecraftVersionMetadata {
 		}
 	}
 
-	public final class Artifact extends Downloadable {
+	public static final class Artifact extends Downloadable {
 	}
 
-	public final class Classifier extends Downloadable {
+	public static final class Classifier extends Downloadable {
 	}
 
-	public final class Rule {
+	public static final class Rule {
 		private String action;
 		private OS os;
 
@@ -211,7 +209,7 @@ public final class MinecraftVersionMetadata {
 		}
 	}
 
-	public final class OS {
+	public static final class OS {
 		private String name;
 
 		public boolean isValidForOS() {
