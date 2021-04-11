@@ -1,0 +1,15 @@
+plugins {
+	id 'net.fabricmc.filament'
+}
+
+filament {
+	minecraftVersion = "1.16.5"
+}
+
+task printLibraries() {
+	doLast {
+		configurations.minecraftLibraries.files.forEach {
+			println it.name
+		}
+	}
+}
