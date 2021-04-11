@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 import daomephsta.unpick.constantmappers.datadriven.parser.FieldKey;
 import daomephsta.unpick.constantmappers.datadriven.parser.MethodKey;
@@ -20,6 +23,10 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.workers.WorkAction;
+import org.gradle.workers.WorkParameters;
+import org.gradle.workers.WorkQueue;
+import org.gradle.workers.WorkerExecutor;
 
 import net.fabricmc.filament.util.FileUtil;
 import net.fabricmc.mapping.tree.ClassDef;
@@ -28,75 +35,102 @@ import net.fabricmc.mapping.tree.MethodDef;
 import net.fabricmc.mapping.tree.TinyMappingFactory;
 import net.fabricmc.mapping.tree.TinyTree;
 
-public class RemapUnpickDefinitionsTask extends DefaultTask {
-	private final RegularFileProperty input = getProject().getObjects().fileProperty();
-	private final RegularFileProperty mappings = getProject().getObjects().fileProperty();
-	private final Property<String> sourceNamespace = getProject().getObjects().property(String.class);
-	private final Property<String> targetNamespace = getProject().getObjects().property(String.class);
-	private final RegularFileProperty output = getProject().getObjects().fileProperty();
+public abstract class RemapUnpickDefinitionsTask extends DefaultTask {
+	@InputFile
+	public abstract RegularFileProperty getInput();
 
 	@InputFile
-	public RegularFileProperty getInput() {
-		return input;
-	}
-
-	@InputFile
-	public RegularFileProperty getMappings() {
-		return mappings;
-	}
+	public abstract RegularFileProperty getMappings();
 
 	@Input
-	public Property<String> getSourceNamespace() {
-		return sourceNamespace;
-	}
+	public abstract Property<String> getSourceNamespace();
 
 	@Input
-	public Property<String> getTargetNamespace() {
-		return targetNamespace;
-	}
+	public abstract Property<String> getTargetNamespace();
 
 	@OutputFile
-	public RegularFileProperty getOutput() {
-		return output;
-	}
+	public abstract RegularFileProperty getOutput();
+
+	@Inject
+	protected abstract WorkerExecutor getWorkerExecutor();
 
 	@TaskAction
-	public void run() throws IOException {
-		File output = getOutput().getAsFile().get();
-		FileUtil.deleteIfExists(output);
+	public void run() {
+		WorkQueue workQueue = getWorkerExecutor().noIsolation();
+		workQueue.submit(RemapAction.class, parameters -> {
+			parameters.getInput().set(getInput());
+			parameters.getMappings().set(getMappings());
+			parameters.getSourceNamespace().set(getSourceNamespace());
+			parameters.getTargetNamespace().set(getTargetNamespace());
+			parameters.getOutput().set(getOutput());
+		});
+		workQueue.await();
+	}
 
-		Map<String, String> classMappings = new HashMap<>();
-		Map<MethodKey, String> methodMappings = new HashMap<>();
-		Map<FieldKey, String> fieldMappings = new HashMap<>();
-		String fromM = getSourceNamespace().get();
-		String toM = getTargetNamespace().get();
+	public interface RemapParameters extends WorkParameters {
+		@InputFile
+		RegularFileProperty getInput();
 
-		try (BufferedReader reader = new BufferedReader(new FileReader(getMappings().getAsFile().get()))) {
-			TinyTree tinyTree = TinyMappingFactory.loadWithDetection(reader);
+		@InputFile
+		RegularFileProperty getMappings();
 
-			for (ClassDef classDef : tinyTree.getClasses()) {
-				classMappings.put(classDef.getName(fromM), classDef.getName(toM));
+		@Input
+		Property<String> getSourceNamespace();
 
-				for (MethodDef methodDef : classDef.getMethods()) {
-					methodMappings.put(
-							new MethodKey(classDef.getName(fromM), methodDef.getName(fromM), methodDef.getDescriptor(fromM)),
-							methodDef.getName(toM)
-					);
-				}
+		@Input
+		Property<String> getTargetNamespace();
 
-				for (FieldDef fieldDef : classDef.getFields()) {
-					fieldMappings.put(
-							new FieldKey(classDef.getName(fromM), fieldDef.getName(fromM)),
-							fieldDef.getName(toM)
-					);
-				}
-			}
+		@OutputFile
+		RegularFileProperty getOutput();
+	}
+
+	public abstract static class RemapAction implements WorkAction<RemapParameters> {
+		@Inject
+		public RemapAction() {
 		}
 
-		try (UnpickV2Reader reader = new UnpickV2Reader(new FileInputStream(getInput().getAsFile().get()))) {
-			UnpickV2Writer writer = new UnpickV2Writer();
-			reader.accept(new UnpickV2Remapper(classMappings, methodMappings, fieldMappings, writer));
-			FileUtil.write(output, writer.getOutput());
+		@Override
+		public void execute() {
+			try {
+				File output = getParameters().getOutput().getAsFile().get();
+				FileUtil.deleteIfExists(output);
+
+				Map<String, String> classMappings = new HashMap<>();
+				Map<MethodKey, String> methodMappings = new HashMap<>();
+				Map<FieldKey, String> fieldMappings = new HashMap<>();
+				String fromM = getParameters().getSourceNamespace().get();
+				String toM = getParameters().getTargetNamespace().get();
+
+				try (BufferedReader reader = new BufferedReader(new FileReader(getParameters().getMappings().getAsFile().get()))) {
+					TinyTree tinyTree = TinyMappingFactory.loadWithDetection(reader);
+
+					for (ClassDef classDef : tinyTree.getClasses()) {
+						classMappings.put(classDef.getName(fromM), classDef.getName(toM));
+
+						for (MethodDef methodDef : classDef.getMethods()) {
+							methodMappings.put(
+									new MethodKey(classDef.getName(fromM), methodDef.getName(fromM), methodDef.getDescriptor(fromM)),
+									methodDef.getName(toM)
+							);
+						}
+
+						for (FieldDef fieldDef : classDef.getFields()) {
+							fieldMappings.put(
+									new FieldKey(classDef.getName(fromM), fieldDef.getName(fromM)),
+									fieldDef.getName(toM)
+							);
+						}
+					}
+				}
+
+				try (UnpickV2Reader reader = new UnpickV2Reader(new FileInputStream(getParameters().getInput().getAsFile().get()))) {
+					UnpickV2Writer writer = new UnpickV2Writer();
+					reader.accept(new UnpickV2Remapper(classMappings, methodMappings, fieldMappings, writer));
+					FileUtil.write(output, writer.getOutput());
+				}
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
 		}
 	}
 }
