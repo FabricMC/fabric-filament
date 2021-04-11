@@ -27,6 +27,14 @@ abstract class ProjectTest {
 		}
 	}
 
+	protected final void copyYarnV2Data(String fileName) {
+		try {
+			copyProjectFile("sharedData", "yarn-mappings-v2.tiny", fileName);
+		} catch (IOException e) {
+			throw new UncheckedIOException("Could not copy Yarn mapping data to " + fileName, e);
+		}
+	}
+
 	protected final InputStream getProjectFile(String projectName, String file) {
 		return ProjectTest.class.getResourceAsStream("/projects/" + projectName + '/' + file);
 	}
@@ -38,8 +46,12 @@ abstract class ProjectTest {
 	}
 
 	private void copyProjectFile(String projectName, String file) throws IOException {
-		try (InputStream in = getProjectFile(projectName, file)) {
-			Path target = projectDirectory.toPath().resolve(file);
+		copyProjectFile(projectName, file, file);
+	}
+
+	private void copyProjectFile(String projectName, String from, String to) throws IOException {
+		try (InputStream in = getProjectFile(projectName, from)) {
+			Path target = projectDirectory.toPath().resolve(to);
 			Files.createDirectories(target.getParent());
 			Files.copy(in, target);
 		}

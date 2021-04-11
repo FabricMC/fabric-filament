@@ -16,9 +16,9 @@ class UnpickDefinitionsTest extends ProjectTest {
 		setupProject(
 				"unpickDef",
 				"unpick-definitions/screen_handler_slot_ids.unpick",
-				"unpick-definitions/set_block_state_flags.unpick",
-				"yarn-mappings-v2.tiny"
+				"unpick-definitions/set_block_state_flags.unpick"
 		);
+		copyYarnV2Data("yarn-mappings-v2.tiny");
 
 		BuildResult result = GradleRunner.create()
 				.withPluginClasspath()
