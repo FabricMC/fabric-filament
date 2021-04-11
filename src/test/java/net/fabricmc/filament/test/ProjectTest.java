@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -26,9 +27,31 @@ abstract class ProjectTest {
 		}
 	}
 
+	protected final void copyYarnV2Data(String fileName) {
+		try {
+			copyProjectFile("sharedData", "yarn-mappings-v2.tiny", fileName);
+		} catch (IOException e) {
+			throw new UncheckedIOException("Could not copy Yarn mapping data to " + fileName, e);
+		}
+	}
+
+	protected final InputStream getProjectFile(String projectName, String file) {
+		return ProjectTest.class.getResourceAsStream("/projects/" + projectName + '/' + file);
+	}
+
+	protected final String getProjectFileText(String projectName, String file) throws IOException {
+		try (InputStream in = getProjectFile(projectName, file)) {
+			return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+		}
+	}
+
 	private void copyProjectFile(String projectName, String file) throws IOException {
-		try (InputStream in = ProjectTest.class.getResourceAsStream("/projects/" + projectName + '/' + file)) {
-			Path target = projectDirectory.toPath().resolve(file);
+		copyProjectFile(projectName, file, file);
+	}
+
+	private void copyProjectFile(String projectName, String from, String to) throws IOException {
+		try (InputStream in = getProjectFile(projectName, from)) {
+			Path target = projectDirectory.toPath().resolve(to);
 			Files.createDirectories(target.getParent());
 			Files.copy(in, target);
 		}
