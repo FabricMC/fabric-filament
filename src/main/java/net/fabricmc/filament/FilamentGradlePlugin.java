@@ -34,12 +34,6 @@ public final class FilamentGradlePlugin implements Plugin<Project> {
 			task.getTargetNamespace().set("intermediary");
 		});
 
-		project.afterEvaluate(this::afterEvaluate);
-	}
-
-	private void afterEvaluate(Project project) {
-		FilamentExtension extension = project.getExtensions().getByType(FilamentExtension.class);
-
 		project.getRepositories().maven(repo -> {
 			repo.setName("mojang");
 			repo.setUrl(Constants.MOJANG_MAVEN_REPO);

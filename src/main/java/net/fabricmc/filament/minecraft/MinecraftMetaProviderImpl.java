@@ -28,15 +28,15 @@ public class MinecraftMetaProviderImpl implements MinecraftMetaProvider {
 	}
 
 	@Override
-	public MinecraftVersionMetadata getVersionMetadata(String id) {
-		Objects.requireNonNull(id);
+	public MinecraftVersionMetadata getVersionMetadata(String version) {
+		Objects.requireNonNull(version);
 
-		if (versionMetadataMap.containsKey(id)) {
-			return versionMetadataMap.get(id);
+		if (versionMetadataMap.containsKey(version)) {
+			return versionMetadataMap.get(version);
 		}
 
-		MinecraftVersionManifest.Version manifestVersion = getVersionManifest().getVersion(id)
-				.orElseThrow(() -> new NoSuchElementException("Could not find version for " + id));
+		MinecraftVersionManifest.Version manifestVersion = getVersionManifest().getVersion(version)
+				.orElseThrow(() -> new NoSuchElementException("Could not find version for " + version));
 
 		MinecraftVersionMetadata metadata;
 
@@ -46,7 +46,7 @@ public class MinecraftMetaProviderImpl implements MinecraftMetaProvider {
 			throw new RuntimeException("Failed to get version meta", e);
 		}
 
-		versionMetadataMap.put(id, metadata);
+		versionMetadataMap.put(version, metadata);
 		return metadata;
 	}
 }
