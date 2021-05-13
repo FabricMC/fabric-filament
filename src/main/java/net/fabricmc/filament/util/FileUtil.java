@@ -1,8 +1,8 @@
 package net.fabricmc.filament.util;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 public final class FileUtil {
@@ -30,8 +30,6 @@ public final class FileUtil {
 	}
 
 	public static void write(File file, String content) throws IOException {
-		try (FileWriter writer = new FileWriter(file)) {
-			writer.write(content);
-		}
+		Files.writeString(file.toPath(), content, StandardCharsets.UTF_8);
 	}
 }

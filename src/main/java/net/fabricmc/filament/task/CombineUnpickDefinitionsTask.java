@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import javax.inject.Inject;
 
@@ -21,6 +24,7 @@ import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import net.fabricmc.filament.util.FileUtil;
+import net.fabricmc.filament.util.UnpickUtil;
 
 public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 	@InputDirectory
@@ -63,7 +67,11 @@ public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 
 				UnpickV2Writer writer = new UnpickV2Writer();
 
-				for (File file : getParameters().getInput().getAsFileTree().getFiles()) {
+				// Sort inputs to get reproducible outputs (also for testing)
+				List<File> files = new ArrayList<>(getParameters().getInput().getAsFileTree().getFiles());
+				files.sort(Comparator.comparing(File::getName));
+
+				for (File file : files) {
 					if (!file.getName().endsWith(".unpick")) {
 						continue;
 					}
@@ -73,7 +81,7 @@ public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 					}
 				}
 
-				FileUtil.write(output, writer.getOutput());
+				FileUtil.write(output, UnpickUtil.getLfOutput(writer));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
