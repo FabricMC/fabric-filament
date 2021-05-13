@@ -10,7 +10,7 @@ plugins {
 def ENV = System.getenv()
 
 group = 'net.fabricmc'
-version = '0.2.1' + (ENV.GITHUB_ACTIONS ? "" : "+local")
+version = '0.3.0' + (ENV.GITHUB_ACTIONS ? "" : "+local")
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_16
