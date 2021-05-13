@@ -29,6 +29,7 @@ import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import net.fabricmc.filament.util.FileUtil;
+import net.fabricmc.filament.util.UnpickUtil;
 import net.fabricmc.mapping.tree.ClassDef;
 import net.fabricmc.mapping.tree.FieldDef;
 import net.fabricmc.mapping.tree.MethodDef;
@@ -126,7 +127,7 @@ public abstract class RemapUnpickDefinitionsTask extends DefaultTask {
 				try (UnpickV2Reader reader = new UnpickV2Reader(new FileInputStream(getParameters().getInput().getAsFile().get()))) {
 					UnpickV2Writer writer = new UnpickV2Writer();
 					reader.accept(new UnpickV2Remapper(classMappings, methodMappings, fieldMappings, writer));
-					FileUtil.write(output, writer.getOutput());
+					FileUtil.write(output, UnpickUtil.getLfOutput(writer));
 				}
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);

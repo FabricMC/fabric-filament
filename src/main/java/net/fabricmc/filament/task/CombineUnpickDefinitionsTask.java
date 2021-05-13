@@ -21,6 +21,7 @@ import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import net.fabricmc.filament.util.FileUtil;
+import net.fabricmc.filament.util.UnpickUtil;
 
 public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 	@InputDirectory
@@ -73,7 +74,7 @@ public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 					}
 				}
 
-				FileUtil.write(output, writer.getOutput());
+				FileUtil.write(output, UnpickUtil.getLfOutput(writer));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
