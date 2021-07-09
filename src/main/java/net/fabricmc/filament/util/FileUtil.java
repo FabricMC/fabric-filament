@@ -4,9 +4,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public final class FileUtil {
 	private FileUtil() {
+	}
+
+	public static Set<Path> toPaths(Iterable<File> files) {
+		Set<Path> set = files instanceof Collection<File> c ? new HashSet<>(c.size()) : new HashSet<>();
+
+		for (File file : files) {
+			set.add(file.toPath());
+		}
+
+		return set;
 	}
 
 	public static void deleteDirectory(File directory) throws IOException {
