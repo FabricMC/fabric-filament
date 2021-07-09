@@ -88,7 +88,7 @@ public abstract class JavadocLintTask extends DefaultTask {
 	}
 
 	private static String getFullName(EntryTree<EntryMapping> mappings, Entry<?> entry) {
-		String name = mappings.get(entry).getTargetName();
+		String name = mappings.get(entry).targetName();
 
 		if (entry.getParent() != null) {
 			name = getFullName(mappings, entry.getParent()) + '.' + name;
@@ -118,7 +118,7 @@ public abstract class JavadocLintTask extends DefaultTask {
 
 				mappings.getAllEntries().parallel().forEach(entry -> {
 					EntryMapping mapping = mappings.get(entry);
-					String javadoc = mapping.getJavadoc();
+					String javadoc = mapping.javadoc();
 
 					if (javadoc != null && !javadoc.isEmpty()) {
 						List<String> localErrors = new ArrayList<>();
