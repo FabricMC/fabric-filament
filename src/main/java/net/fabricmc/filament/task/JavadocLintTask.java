@@ -1,7 +1,6 @@
 package net.fabricmc.filament.task;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +10,7 @@ import javax.inject.Inject;
 
 import cuchaz.enigma.ProgressListener;
 import cuchaz.enigma.translation.mapping.EntryMapping;
-import cuchaz.enigma.translation.mapping.serde.MappingFileNameFormat;
 import cuchaz.enigma.translation.mapping.serde.MappingParseException;
-import cuchaz.enigma.translation.mapping.serde.MappingSaveParameters;
 import cuchaz.enigma.translation.mapping.serde.enigma.EnigmaMappingsReader;
 import cuchaz.enigma.translation.mapping.tree.EntryTree;
 import cuchaz.enigma.translation.representation.entry.Entry;
@@ -21,6 +18,7 @@ import cuchaz.enigma.translation.representation.entry.LocalVariableEntry;
 import cuchaz.enigma.translation.representation.entry.MethodEntry;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileType;
 import org.gradle.api.logging.Logger;
@@ -57,25 +55,18 @@ public abstract class JavadocLintTask extends DefaultTask {
 	protected abstract WorkerExecutor getWorkerExecutor();
 
 	@TaskAction
-	public void run(InputChanges changes) throws IOException {
-		Path directory = mappingDirectory.getAsFile().get().toPath();
-		Path tempMappingDirectory = Files.createTempDirectory("javadocLintMappings");
-		Files.createDirectories(tempMappingDirectory);
-
-		for (FileChange change : changes.getFileChanges(mappingDirectory)) {
-			if (change.getChangeType() != ChangeType.REMOVED && change.getFileType() == FileType.FILE) {
-				Path targetPath = tempMappingDirectory.resolve(directory.relativize(change.getFile().getAbsoluteFile().toPath()));
-				Files.createDirectories(targetPath.getParent());
-				Files.copy(change.getFile().toPath(), targetPath);
-			}
-		}
-
+	public void run(InputChanges changes) {
 		WorkQueue workQueue = getWorkerExecutor().noIsolation();
-		workQueue.submit(LintAction.class, parameters -> parameters.getMappingDirectory().set(tempMappingDirectory.toFile()));
-		workQueue.await();
 
-		// Clean up and delete the temp directory
-		FileUtil.deleteDirectory(tempMappingDirectory.toFile());
+		workQueue.submit(LintAction.class, parameters -> {
+			for (FileChange change : changes.getFileChanges(mappingDirectory)) {
+				if (change.getChangeType() != ChangeType.REMOVED && change.getFileType() == FileType.FILE) {
+					parameters.getMappingFiles().from(change.getFile());
+				}
+			}
+		});
+
+		workQueue.await();
 	}
 
 	private static boolean isRegularMethodParameter(String line) {
@@ -90,6 +81,10 @@ public abstract class JavadocLintTask extends DefaultTask {
 	private static String getFullName(EntryTree<EntryMapping> mappings, Entry<?> entry) {
 		String name = mappings.get(entry).targetName();
 
+		if (entry instanceof MethodEntry method) {
+			name += method.getDesc().toString();
+		}
+
 		if (entry.getParent() != null) {
 			name = getFullName(mappings, entry.getParent()) + '.' + name;
 		}
@@ -98,7 +93,7 @@ public abstract class JavadocLintTask extends DefaultTask {
 	}
 
 	public interface LintParameters extends WorkParameters {
-		DirectoryProperty getMappingDirectory();
+		ConfigurableFileCollection getMappingFiles();
 	}
 
 	public abstract static class LintAction implements WorkAction<LintParameters> {
@@ -111,9 +106,8 @@ public abstract class JavadocLintTask extends DefaultTask {
 		@Override
 		public void execute() {
 			try {
-				var saveParameters = new MappingSaveParameters(MappingFileNameFormat.BY_DEOBF);
-				Path directory = getParameters().getMappingDirectory().getAsFile().get().toPath();
-				EntryTree<EntryMapping> mappings = EnigmaMappingsReader.DIRECTORY.read(directory, ProgressListener.none(), saveParameters);
+				var files = FileUtil.toPaths(getParameters().getMappingFiles().getFiles()).toArray(new Path[0]);
+				EntryTree<EntryMapping> mappings = EnigmaMappingsReader.readFiles(ProgressListener.none(), files);
 				List<String> errors = new ArrayList<>();
 
 				mappings.getAllEntries().parallel().forEach(entry -> {
