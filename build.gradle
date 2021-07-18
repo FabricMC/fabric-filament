@@ -73,6 +73,7 @@ test {
 }
 
 task cleanTestData(type: Delete) {
+	// Delete the generated test resources to make sure file paths etc haven't changed
 	delete generatedTestResources
 }
 
