@@ -97,6 +97,10 @@ public abstract class MappingLintTask extends DefaultTask {
 	private static String getFullName(EntryTree<EntryMapping> mappings, Entry<?> entry) {
 		String name = mappings.get(entry).targetName();
 
+		if (name == null) {
+			name = "<anonymous>";
+		}
+
 		if (entry instanceof MethodEntry method) {
 			name += method.getDesc().toString();
 		}
