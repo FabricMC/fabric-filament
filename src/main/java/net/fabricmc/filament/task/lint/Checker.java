@@ -2,7 +2,6 @@ package net.fabricmc.filament.task.lint;
 
 import java.io.Serializable;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import cuchaz.enigma.translation.mapping.EntryMapping;
@@ -17,12 +16,12 @@ public interface Checker<E extends Entry<?>> extends Serializable {
 			new FieldNamingChecker().withTypeGuard(FieldEntry.class)
 	);
 
-	void check(E entry, EntryMapping mapping, Function<Entry<?>, AccessFlags> accessProvider, Consumer<String> errorConsumer);
+	void check(E entry, EntryMapping mapping, Function<Entry<?>, AccessFlags> accessProvider, ErrorReporter errorReporter);
 
 	default Checker<Entry<?>> withTypeGuard(Class<E> entryType) {
-		return (entry, mapping, access, errorConsumer) -> {
+		return (entry, mapping, access, errorReporter) -> {
 			if (entryType.isInstance(entry)) {
-				check(entryType.cast(entry), mapping, access, errorConsumer);
+				check(entryType.cast(entry), mapping, access, errorReporter);
 			}
 		};
 	}

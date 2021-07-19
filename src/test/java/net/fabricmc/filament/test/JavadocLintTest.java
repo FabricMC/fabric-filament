@@ -55,7 +55,7 @@ class JavadocLintTest extends ProjectTest {
 		BuildResult result = runGradleBuild(false);
 
 		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
-		assertThat(result.getOutput()).contains("Found 3 format errors");
+		assertThat(result.getOutput()).contains("Found 3 errors");
 	}
 
 	@Test

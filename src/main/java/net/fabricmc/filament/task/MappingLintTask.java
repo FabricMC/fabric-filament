@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -47,6 +49,7 @@ import org.gradle.workers.WorkQueue;
 import org.gradle.workers.WorkerExecutor;
 
 import net.fabricmc.filament.task.lint.Checker;
+import net.fabricmc.filament.task.lint.Severity;
 import net.fabricmc.filament.util.FileUtil;
 
 public abstract class MappingLintTask extends DefaultTask {
@@ -130,7 +133,7 @@ public abstract class MappingLintTask extends DefaultTask {
 			try {
 				LintParameters params = getParameters();
 				Set<Checker<Entry<?>>> checkers = getParameters().getCheckers().get();
-				List<String> errors = new ArrayList<>();
+				Map<Severity, List<String>> messagesBySeverity = new EnumMap<>(Severity.class);
 
 				// Set up Enigma
 				Enigma enigma = Enigma.create();
@@ -150,33 +153,54 @@ public abstract class MappingLintTask extends DefaultTask {
 				mappings.getAllEntries().parallel().forEach(entry -> {
 					EntryMapping mapping = mappings.get(entry);
 					assert mapping != null;
-					List<String> localErrors = new ArrayList<>();
+					List<CheckerError> localErrors = new ArrayList<>();
 
 					for (Checker<Entry<?>> checker : checkers) {
-						checker.check(entry, mapping, accessProvider, localErrors::add);
+						checker.check(entry, mapping, accessProvider, (severity, message) -> localErrors.add(new CheckerError(severity, message)));
 					}
 
 					if (!localErrors.isEmpty()) {
 						String name = getFullName(mappings, entry);
 
-						for (String error : localErrors) {
-							errors.add(name + ": " + error);
+						for (CheckerError error : localErrors) {
+							messagesBySeverity.computeIfAbsent(error.severity(), s -> new ArrayList<>()).add(name + ": " + error.message());
 						}
 					}
 				});
 
-				if (!errors.isEmpty()) {
-					for (String error : errors) {
-						LOGGER.error("lint: {}", error);
+				if (!messagesBySeverity.isEmpty()) {
+					int errors = 0;
+					int warnings = 0;
+
+					for (var entry : messagesBySeverity.entrySet()) {
+						if (entry.getKey() == Severity.ERROR) {
+							for (String message : entry.getValue()) {
+								errors++;
+								LOGGER.error("error: {}", message);
+							}
+						} else {
+							for (String message : entry.getValue()) {
+								warnings++;
+								LOGGER.warn("warning: {}", message);
+							}
+						}
 					}
 
-					throw new GradleException("Found " + errors.size() + " format errors! See the log for details.");
+					String message = String.format("Found %d errors and %d warnings!", errors, warnings);
+					LOGGER.warn(message);
+
+					if (errors > 0) {
+						throw new GradleException(message + " See the log for details.");
+					}
 				}
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			} catch (MappingParseException e) {
 				throw new GradleException("Could not parse mappings", e);
 			}
+		}
+
+		private record CheckerError(Severity severity, String message) {
 		}
 	}
 }

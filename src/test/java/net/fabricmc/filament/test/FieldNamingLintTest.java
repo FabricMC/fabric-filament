@@ -29,18 +29,18 @@ class FieldNamingLintTest extends ProjectTest {
 	@Test
 	public void instanceFinalUppercase() {
 		setupProject("fieldNamingLint", "mappings/InstanceFinalUppercase.mapping");
-		BuildResult result = runGradleBuild(false);
+		BuildResult result = runGradleBuild(true);
 
-		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.SUCCESS); // soft warning
 		assertThat(result.getOutput()).contains("field starts with uppercase character 'I'");
 	}
 
 	@Test
 	public void staticNonFinalUppercase() {
 		setupProject("fieldNamingLint", "mappings/StaticNonFinalUppercase.mapping");
-		BuildResult result = runGradleBuild(false);
+		BuildResult result = runGradleBuild(true);
 
-		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.SUCCESS); // soft warning
 		assertThat(result.getOutput()).contains("field starts with uppercase character 'S'");
 	}
 
@@ -55,7 +55,7 @@ class FieldNamingLintTest extends ProjectTest {
 		BuildResult result = runGradleBuild(false);
 
 		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
-		assertThat(result.getOutput()).contains("Found 3 format errors");
+		assertThat(result.getOutput()).contains("Found 1 errors and 2 warnings");
 	}
 
 	@Test
