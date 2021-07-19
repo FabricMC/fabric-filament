@@ -1,0 +1,4 @@
+CLASS c com/example/StaticNonFinalUppercase
+	FIELD a STATIC_FINAL I
+	FIELD b instanceFinal I
+	FIELD c STATIC_NON_FINAL I

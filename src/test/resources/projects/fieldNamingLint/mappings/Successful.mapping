@@ -1,0 +1,4 @@
+CLASS d com/example/Successful
+	FIELD a STATIC_FINAL I
+	FIELD b instanceFinal I
+	FIELD c staticNonFinal I

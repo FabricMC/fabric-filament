@@ -12,7 +12,7 @@ class JavadocLintTest extends ProjectTest {
 		GradleRunner runner = GradleRunner.create()
 				.withPluginClasspath()
 				.withProjectDir(projectDirectory)
-				.withArguments("javadocLint");
+				.withArguments("mappingLint");
 
 		return shouldSucceed ? runner.build() : runner.buildAndFail();
 	}
@@ -22,7 +22,7 @@ class JavadocLintTest extends ProjectTest {
 		setupProject("javadocLint", "mappings/ParamInMethod.mapping");
 		BuildResult result = runGradleBuild(false);
 
-		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
 		assertThat(result.getOutput()).contains("method javadoc contains parameter docs");
 	}
 
@@ -31,7 +31,7 @@ class JavadocLintTest extends ProjectTest {
 		setupProject("javadocLint", "mappings/ParamPeriod.mapping");
 		BuildResult result = runGradleBuild(false);
 
-		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
 		assertThat(result.getOutput()).contains("parameter javadoc ends with '.'");
 	}
 
@@ -40,7 +40,7 @@ class JavadocLintTest extends ProjectTest {
 		setupProject("javadocLint", "mappings/UppercaseParam.mapping");
 		BuildResult result = runGradleBuild(false);
 
-		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
 		assertThat(result.getOutput()).contains("parameter javadoc starts with uppercase word 'The'");
 	}
 
@@ -54,8 +54,8 @@ class JavadocLintTest extends ProjectTest {
 		);
 		BuildResult result = runGradleBuild(false);
 
-		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
-		assertThat(result.getOutput()).contains("Found 3 javadoc format errors");
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.FAILED);
+		assertThat(result.getOutput()).contains("Found 3 errors");
 	}
 
 	@Test
@@ -63,6 +63,6 @@ class JavadocLintTest extends ProjectTest {
 		setupProject("javadocLint", "mappings/Successful.mapping");
 		BuildResult result = runGradleBuild(true);
 
-		assertThat(result.task(":javadocLint").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
+		assertThat(result.task(":mappingLint").getOutcome()).isEqualTo(TaskOutcome.SUCCESS);
 	}
 }

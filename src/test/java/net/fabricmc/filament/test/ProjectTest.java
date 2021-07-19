@@ -18,6 +18,7 @@ abstract class ProjectTest {
 		try {
 			copyProjectFile(name, "build.gradle");
 			copyProjectFile(name, "settings.gradle");
+			copyProjectFile("sharedData", "test-data.jar");
 
 			for (String file : extraFiles) {
 				copyProjectFile(name, file);

@@ -10,7 +10,7 @@ plugins {
 def ENV = System.getenv()
 
 group = 'net.fabricmc'
-version = '0.3.1' + (ENV.GITHUB_ACTIONS ? "" : "+local")
+version = '0.4.0-beta.2' + (ENV.GITHUB_ACTIONS ? "" : "+local")
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_16
@@ -22,6 +22,13 @@ java {
 tasks.withType(JavaCompile) {
 	options.encoding = "UTF-8"
 	options.release = 16
+}
+
+File generatedTestResources = new File(buildDir, 'generatedTestResources')
+
+sourceSets {
+	test.resources.srcDir generatedTestResources
+	testData
 }
 
 repositories {
@@ -63,6 +70,24 @@ test {
 	testLogging {
 		exceptionFormat = TestExceptionFormat.FULL
 	}
+}
+
+task cleanTestData(type: Delete) {
+	// Delete the generated test resources to make sure file paths etc haven't changed
+	delete generatedTestResources
+}
+
+task testDataJar(type: Jar) {
+	dependsOn testDataClasses, cleanTestData
+	group = 'build'
+	destinationDirectory = new File(generatedTestResources, 'projects/sharedData')
+	archiveFileName = 'test-data.jar'
+
+	from sourceSets.testData.output
+}
+
+processTestResources {
+	dependsOn testDataJar
 }
 
 checkstyle {
