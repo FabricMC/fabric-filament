@@ -2,7 +2,7 @@ package net.fabricmc.filament;
 
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.BasePlugin;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 import net.fabricmc.filament.task.CombineUnpickDefinitionsTask;
 import net.fabricmc.filament.task.GeneratePackageInfoMappingsTask;
@@ -21,7 +21,7 @@ public final class FilamentGradlePlugin implements Plugin<Project> {
 		});
 
 		project.getPluginManager().withPlugin("org.gradle.base", p -> {
-			project.getTasks().named(BasePlugin.CLEAN_TASK_NAME, check -> check.dependsOn(mappingLint));
+			project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME, check -> check.dependsOn(mappingLint));
 		});
 
 		var combineUnpickDefinitions = project.getTasks().register("combineUnpickDefinitions", CombineUnpickDefinitionsTask.class);
