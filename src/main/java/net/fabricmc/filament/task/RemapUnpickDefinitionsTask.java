@@ -65,7 +65,6 @@ public abstract class RemapUnpickDefinitionsTask extends DefaultTask {
 			parameters.getTargetNamespace().set(getTargetNamespace());
 			parameters.getOutput().set(getOutput());
 		});
-		workQueue.await();
 	}
 
 	public interface RemapParameters extends WorkParameters {

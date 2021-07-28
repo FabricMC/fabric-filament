@@ -65,8 +65,6 @@ public abstract class JavadocLintTask extends DefaultTask {
 				}
 			}
 		});
-
-		workQueue.await();
 	}
 
 	private static boolean isRegularMethodParameter(String line) {

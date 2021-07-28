@@ -43,7 +43,6 @@ public abstract class CombineUnpickDefinitionsTask extends DefaultTask {
 			parameters.getInput().set(getInput());
 			parameters.getOutput().set(getOutput());
 		});
-		workQueue.await();
 	}
 
 	public interface CombineParameters extends WorkParameters {
